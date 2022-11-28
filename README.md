@@ -1,1 +1,1 @@
-# VBA_code
+利用EXCEL的VBA來做資料的抓取和格式處理
