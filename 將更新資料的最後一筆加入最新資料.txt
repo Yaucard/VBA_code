@@ -1,0 +1,36 @@
+Sub 加入最新資料()
+    
+    Dim c As Double, Sheet4_Day As Date, Sheet3_Day As Date
+    
+    Dim Sheet3Column As Integer, xRow3 As Integer, xRow1 As Integer
+
+    
+    '取得Sheet1最後一列的數字
+        
+    xRow1 = sheet4.Cells(Rows.Count, "a").End(xlUp).Row
+        
+    '取得Sheet3最後一列的數字
+        
+    xRow3 = Sheet3.Cells(Rows.Count, "a").End(xlUp).Row
+        
+    '取得Sheet3最後一行的數字
+        
+    Sheet3Column = Sheet3.Cells(xRow3, Columns.Count).End(xlToLeft).Column
+        
+    '將Sheet3最後一列的資料加到Sheet1最後一列
+    Sheet4_Day = sheet4.Cells(xRow1, "a")
+    Sheet3_Day = Sheet3.Cells(xRow3, "a")
+        
+    If Sheet4_Day = Sheet3_Day Then
+    
+        MsgBox "已經是最新資料了!!"
+    
+    Else
+        For c = 0 To Sheet3Column
+            sheet4.Cells(xRow1 + 1, c + 1) = Sheet3.Cells(xRow3, c + 1)
+        Next
+        MsgBox "加入完成"
+    End If
+    
+    
+End Sub

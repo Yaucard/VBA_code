@@ -1,0 +1,54 @@
+
+Sub 更新()
+
+    Dim oXmlhttp As Object, oHtmldoc As Object, surl, i, E, r As Double, c As Double
+    
+    Dim StockNo As String, xday As String, xRow As Integer, Day As Date, xTime As Date
+    
+
+    
+    
+     StockNo = Sheet1.[A2]
+     Day = Sheet1.[C2]
+     
+     Sheet3.Cells.Clear  '清除下載記錄
+    
+        xday = Format(Day, yyyymmdd)
+        Set oXmlhttp = CreateObject(msxml2.xmlhttp)
+        Set oHtmldoc = CreateObject(htmlfile)
+        surl = httpswww.twse.com.twexchangeReportSTOCK_DAYresponse=html&date= & xday & &stockNo= & StockNo
+        With oXmlhttp
+            .Open Get, surl, False
+            .Send
+            If InStr(.responseText, 很抱歉，沒有符合條件的資料!) Then
+                MsgBox 很抱歉，沒有符合條件的資料! & vbLf & 請檢查 股票代號
+                Exit Sub
+            ElseIf InStr(.responseText, 查詢日期小於88年1月5日，請重新查詢) Then
+                MsgBox 查詢日期小於88年1月5日! & vbLf & 請檢查 起始日期
+                Exit Sub
+            ElseIf InStr(.responseText, 查詢日期大於今日，請重新查詢) Then
+                MsgBox 查詢日期大於今日 & vbLf & 請檢查 終止日期
+                Exit Sub
+            End If
+            oHtmldoc.write .responseText
+        End With
+        With oHtmldoc
+            Set E = .all.tags(table)(0)
+            With Sheet3
+                xRow = .Cells(Rows.Count, a).End(xlUp).Row
+
+                For r = IIf(i = 0, 0, 2) To E.Rows.Length - 1
+                    For c = 0 To E.Rows(r).Cells.Length - 1
+                    .Cells(xRow + r, c + 1) = E.Rows(r).Cells(c).innertext
+                    Next
+                Next
+            End With
+        End With
+        Set oXmlhttp = Nothing
+        Set oHtmldoc = Nothing
+        Application.StatusBar =   更新完畢 
+        
+    MsgBox 更新完成
+        
+
+End Sub

@@ -1,0 +1,67 @@
+Sub Ex_日收盤價及月平均收盤價()
+    '程式碼來源: http://forum.twbts.com/viewthread.php?tid=20381
+
+    Dim oXmlhttp As Object, oHtmldoc As Object, surl, i, E, r As Double, c As Double
+    Dim StockNo As String, xday As String, xRow As Integer, Day1 As Date, Day2 As Date, xTime As Date
+     StockNo = [A2]
+     Day1 = ActiveSheet.[B2]
+     Day2 = ActiveSheet.[C2]
+     
+    Sheet2.Cells.Clear  '清除下載記錄
+    
+    For i = 0 To DateDiff("m", Day1, Day2)
+        xday = Format(DateAdd("m", i, Day1), "yyyymmdd")
+        Set oXmlhttp = CreateObject("msxml2.xmlhttp")
+        Set oHtmldoc = CreateObject("htmlfile")
+        surl = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=html&date=" & xday & "&stockNo=" & StockNo
+        With oXmlhttp
+            Sheet2.Cells(1, 1).Offset(i, 0).Value = surl
+            .Open "Get", surl, False
+            .Send
+            If InStr(.responseText, "很抱歉，沒有符合條件的資料!") Then
+                MsgBox "很抱歉，沒有符合條件的資料!" & vbLf & "請檢查 股票代號"
+                Exit Sub
+            ElseIf InStr(.responseText, "查詢日期小於88年1月5日，請重新查詢") Then
+                MsgBox "查詢日期小於88年1月5日!" & vbLf & "請檢查 起始日期"
+                Exit Sub
+            ElseIf InStr(.responseText, "查詢日期大於今日，請重新查詢") Then
+                MsgBox "查詢日期大於今日" & vbLf & "請檢查 終止日期"
+                Exit Sub
+            End If
+            oHtmldoc.write .responseText
+        End With
+        With oHtmldoc
+            Set E = .all.tags("table")(0)
+            With sheet4
+                If i = 0 Then .UsedRange.Offset(2).Clear
+                xRow = .Cells(Rows.Count, "a").End(xlUp).Row + IIf(i = 0, 0, 0)
+               
+                For r = IIf(i = 0, 0, 2) To E.Rows.Length - 1
+                    For c = 0 To E.Rows(r).Cells.Length - 1
+                    .Cells(xRow + r + IIf(i > 0, -1, 0), c + 1) = E.Rows(r).Cells(c).innertext
+                    Next
+                Next
+            End With
+        End With
+        Set oXmlhttp = Nothing
+        Set oHtmldoc = Nothing
+        Application.StatusBar = "****  " & Format(DateAdd("m", i, Day1), "ee/mm") & "  載完畢 *****"
+    '**** 股市營業時間有流量管制 **
+    'xTime = Time + #12:00:09 AM#   '間隔 10秒
+    'Do :    DoEvents:    Loop Until Time > xTime
+   '**********或是下式**********************
+    'Application.Wait Now + #12:00:09 AM#
+    '********************************
+        Dim newHour, newMinute, newSecond, waitTime
+        '每1個月間隔4秒'
+        If i Mod 1 = 0 Then
+            newHour = Hour(Now())           '抓取現在電腦時間的小時單位
+            newMinute = Minute(Now())       '抓取現在電腦時間的分鐘單位
+            newSecond = Second(Now()) + 4   '抓取現在電腦時間秒數單位+4
+            waitTime = TimeSerial(newHour, newMinute, newSecond)
+            Application.Wait waitTime
+        End If
+    Next
+    MsgBox "ok"
+        
+End Sub
